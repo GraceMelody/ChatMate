@@ -1,0 +1,73 @@
+{
+  "project_info": {
+    "project_number": "372608134695",
+    "firebase_url": "https://chatapp-8b3e8.firebaseio.com",
+    "project_id": "chatapp-8b3e8",
+    "storage_bucket": "chatapp-8b3e8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:372608134695:android:3ee0fd8fb0b4e35e",
+        "android_client_info": {
+          "package_name": "com.app.chat.chatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "372608134695-o836toijgojo038utimqe76hue5e3fg6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPaOwcYqClZporf-KkzadNgseASKnKMIY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:372608134695:android:08057dc028b217fa",
+        "android_client_info": {
+          "package_name": "com.example.gracemelody.chatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "372608134695-o836toijgojo038utimqe76hue5e3fg6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPaOwcYqClZporf-KkzadNgseASKnKMIY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
