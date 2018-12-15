@@ -1,8 +1,11 @@
 package com.example.gracemelody.chatapp;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -20,12 +23,15 @@ import java.util.ArrayList;
 public class ChatActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    private static final String CHANNEL_LOBBY = "lobby";
     ChatEngine chatEngine;
     EditText txtMsg;
     NavigationView navigationView;
 
     ArrayList<String> subscribedChannels = new ArrayList<>();
 
+    String currentChannel;
+    MenuItem leaveChannelMenuItem;
 
 
     @Override
@@ -44,11 +50,6 @@ public class ChatActivity extends AppCompatActivity
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        navigationView.getMenu().add("A").setIcon(android.support.design.R.drawable.design_ic_visibility);
-        navigationView.getMenu().add("B");
-        navigationView.getMenu().add("C");
-
-
         txtMsg = findViewById(R.id.txtMsg);
         chatEngine = new ChatEngine();
 
@@ -56,6 +57,8 @@ public class ChatActivity extends AppCompatActivity
 
         chatRecyclerView.setAdapter( new ChatAdapter(chatRecyclerView, chatEngine));
         chatRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+
+        addChannel("lobby");
 
         findViewById(R.id.floatingActionButton).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,6 +100,8 @@ public class ChatActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.chatroom, menu);
+        leaveChannelMenuItem = menu.findItem(R.id.action_leave_channel);
+        leaveChannelMenuItem.setEnabled(false);
         return true;
     }
 
@@ -108,7 +113,8 @@ public class ChatActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_leave_channel) {
+            leaveCurrentChannel();
             return true;
         }
 
@@ -122,32 +128,84 @@ public class ChatActivity extends AppCompatActivity
         int id = item.getItemId();
 
         String newSelectedChannel = item.getTitle().toString();
-        switchChannel(newSelectedChannel, item);
+        switchChannel(newSelectedChannel);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
-    void switchChannel(String input, MenuItem item) {
+    void switchChannel(String input) {
 
         String newSelectedChannel = input.toLowerCase().trim();
+
+        if (leaveChannelMenuItem != null) {
+            if (newSelectedChannel.equals(CHANNEL_LOBBY)) {
+                leaveChannelMenuItem.setEnabled(false);
+            } else {
+                leaveChannelMenuItem.setEnabled(true);
+            }
+        }
 
         chatEngine.switchChannel(newSelectedChannel);
 
         Menu menu = navigationView.getMenu();
 
-        for (int i=0; i<menu.size(); i++) {
-            menu.getItem(i).setIcon(null);
-        }
-        item.setIcon(android.support.design.R.drawable.design_ic_visibility);
+        currentChannel = newSelectedChannel;
 
+        for (int i=0; i<menu.size(); i++) {
+            if (menu.getItem(i).getTitle().equals(newSelectedChannel)) {
+                menu.getItem(i).setIcon(android.support.design.R.drawable.design_ic_visibility);
+                menu.getItem(i).setChecked(true);
+            } else {
+                menu.getItem(i).setIcon(null);
+                menu.getItem(i).setChecked(false);
+            }
+        }
     }
 
     void addChannel(String input) {
         String channel = input.toLowerCase().trim();
-        subscribedChannels.add(channel);
-        MenuItem newItem = navigationView.getMenu().add(channel);
 
-        switchChannel(channel, newItem);
+        subscribedChannels.add(channel);
+
+        MenuItem newItem = navigationView.getMenu().add(Menu.NONE, channel.hashCode(), Menu.NONE, channel).setChecked(true);
+
+        navigationView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Toast.makeText(v.getContext(), ""+v.getId(),Toast.LENGTH_SHORT ).show();
+                MenuItem menuItem = (MenuItem) v;
+                Toast.makeText(v.getContext(), menuItem.getTitle().toString(), Toast.LENGTH_SHORT ).show();
+
+                return false;
+            }
+        });
+
+        switchChannel(channel);
+    }
+
+    void leaveCurrentChannel() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(String.format("Leave channel %s? ", currentChannel));
+        builder.setPositiveButton("Leave", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Menu menu = navigationView.getMenu();
+
+                menu.removeItem(currentChannel.hashCode());
+
+                subscribedChannels.remove(currentChannel);
+                switchChannel(CHANNEL_LOBBY);
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.create().show();
+
     }
 }
