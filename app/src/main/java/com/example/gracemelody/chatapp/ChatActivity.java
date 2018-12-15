@@ -15,12 +15,18 @@ import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 public class ChatActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     ChatEngine chatEngine;
     EditText txtMsg;
     NavigationView navigationView;
+
+    ArrayList<String> subscribedChannels = new ArrayList<>();
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +56,22 @@ public class ChatActivity extends AppCompatActivity
 
         chatRecyclerView.setAdapter( new ChatAdapter(chatRecyclerView, chatEngine));
         chatRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+
+        findViewById(R.id.floatingActionButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TextDialogFragment textDialogFragment = new TextDialogFragment();
+                textDialogFragment.setTitle("Add Channel");
+                textDialogFragment.setTextDialogFragmentListener(new TextDialogFragment.TextDialogFragmentListener() {
+                    @Override
+                    public void onPositiveClick(TextDialogFragment dialog) {
+                        String newChannel = dialog.getText();
+                        addChannel(newChannel);
+                    }
+                });
+                textDialogFragment.show(getSupportFragmentManager(), "TextDialogFragment");
+            }
+        });
 
         findViewById(R.id.btnSend).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -99,20 +121,33 @@ public class ChatActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        Toast.makeText(this,item.getTitle(), Toast.LENGTH_SHORT).show();
+        String newSelectedChannel = item.getTitle().toString();
+        switchChannel(newSelectedChannel, item);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
 
-        chatEngine.switchChannel(item.getTitle().toString());
+    void switchChannel(String input, MenuItem item) {
+
+        String newSelectedChannel = input.toLowerCase().trim();
+
+        chatEngine.switchChannel(newSelectedChannel);
 
         Menu menu = navigationView.getMenu();
 
         for (int i=0; i<menu.size(); i++) {
             menu.getItem(i).setIcon(null);
         }
-
         item.setIcon(android.support.design.R.drawable.design_ic_visibility);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
+    }
+
+    void addChannel(String input) {
+        String channel = input.toLowerCase().trim();
+        subscribedChannels.add(channel);
+        MenuItem newItem = navigationView.getMenu().add(channel);
+
+        switchChannel(channel, newItem);
     }
 }
