@@ -1,6 +1,9 @@
 package com.example.gracemelody.chatapp;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
@@ -28,16 +31,21 @@ public class ChatActivity extends AppCompatActivity
     EditText txtMsg;
     NavigationView navigationView;
 
-    ArrayList<String> subscribedChannels = new ArrayList<>();
-
-    String currentChannel;
     MenuItem leaveChannelMenuItem;
+
+    Intent serviceIntent;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+        if (!isMyServiceRunning(NotificationService.class)) {
+            serviceIntent = new Intent(this, NotificationService.class);
+            startService(serviceIntent);
+        }
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -51,7 +59,7 @@ public class ChatActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         txtMsg = findViewById(R.id.txtMsg);
-        chatEngine = new ChatEngine();
+        chatEngine = ChatEngine.Instance();
 
         RecyclerView chatRecyclerView = findViewById(R.id.chatRecyclerView);
 
@@ -86,6 +94,13 @@ public class ChatActivity extends AppCompatActivity
         });
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -103,6 +118,12 @@ public class ChatActivity extends AppCompatActivity
         leaveChannelMenuItem = menu.findItem(R.id.action_leave_channel);
         leaveChannelMenuItem.setEnabled(false);
         return true;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopService(serviceIntent);
     }
 
     @Override
@@ -150,7 +171,7 @@ public class ChatActivity extends AppCompatActivity
 
         Menu menu = navigationView.getMenu();
 
-        currentChannel = newSelectedChannel;
+        //currentChannel = newSelectedChannel;
 
         for (int i=0; i<menu.size(); i++) {
             if (menu.getItem(i).getTitle().equals(newSelectedChannel)) {
@@ -166,7 +187,8 @@ public class ChatActivity extends AppCompatActivity
     void addChannel(String input) {
         String channel = input.toLowerCase().trim();
 
-        subscribedChannels.add(channel);
+        chatEngine.addChannel(channel);
+        //subscribedChannels.add(channel);
 
         MenuItem newItem = navigationView.getMenu().add(Menu.NONE, channel.hashCode(), Menu.NONE, channel).setChecked(true);
 
@@ -186,15 +208,16 @@ public class ChatActivity extends AppCompatActivity
 
     void leaveCurrentChannel() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(String.format("Leave channel %s? ", currentChannel));
+        builder.setTitle(String.format("Leave channel %s? ", chatEngine.getCurrentChannel()));
         builder.setPositiveButton("Leave", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Menu menu = navigationView.getMenu();
 
-                menu.removeItem(currentChannel.hashCode());
+                menu.removeItem(chatEngine.getCurrentChannel().hashCode());
 
-                subscribedChannels.remove(currentChannel);
+                chatEngine.leaveChannel(chatEngine.getCurrentChannel());
+                //subscribedChannels.remove(currentChannel);
                 switchChannel(CHANNEL_LOBBY);
             }
         });
@@ -207,5 +230,17 @@ public class ChatActivity extends AppCompatActivity
 
         builder.create().show();
 
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                Log.i ("isMyServiceRunning?", true+"");
+                return true;
+            }
+        }
+        Log.i ("isMyServiceRunning?", false+"");
+        return false;
     }
 }

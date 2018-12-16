@@ -17,25 +17,33 @@ import java.util.Map;
 
 public class ChatEngine implements ChildEventListener{
 
-    private final String CHANNELS = "channels";
-    private final String CHANNEL_NOTIFICATIONS = "channels_notifs";
+    public static final String CHANNELS = "channels";
+    public static final String CHANNEL_NOTIFICATIONS = "channels_notifs";
+
     private DatabaseReference root;
     private DatabaseReference channel;
     private DatabaseReference channelNotifications;
 
+    private static ChatEngine chatEngineInstance;
 
+    private ArrayList<String> subscribedChannels = new ArrayList<>();
     private String channelName;
 
-    ArrayList<Chat> messages = new ArrayList<>();
+    private ArrayList<Chat> messages = new ArrayList<>();
 
-    public ChatEngine() {
+    public String getCurrentChannel() {
+        return channelName;
+    }
+
+    public static ChatEngine Instance() {
+        if (chatEngineInstance == null) {
+            chatEngineInstance = new ChatEngine();
+        }
+        return chatEngineInstance;
+    }
+
+    private ChatEngine() {
         root = FirebaseDatabase.getInstance().getReference();
-
-        //channel = root.child(CHANNELS).child(channelName);
-        //channel.addChildEventListener(this);
-
-        switchChannel("A");
-
 
         channelNotifications = root.child(CHANNEL_NOTIFICATIONS);
         channelNotifications.addChildEventListener(new ChildEventListener() {
@@ -65,6 +73,18 @@ public class ChatEngine implements ChildEventListener{
 
             }
         });
+    }
+
+    public void addChannel(String channel) {
+        subscribedChannels.add(channel);
+    }
+
+    public void leaveChannel(String channel) {
+        subscribedChannels.remove(channel);
+    }
+
+    public boolean isSubscribedTo(String channel) {
+        return subscribedChannels.contains(channel);
     }
 
     void send(String username, String message) {
