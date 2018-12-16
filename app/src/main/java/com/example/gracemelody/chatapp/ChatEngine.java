@@ -46,6 +46,7 @@ public class ChatEngine implements ChildEventListener{
     private ChildEventListener activeUserPingListener = new ActiveUserPingListener();
 
     private HashMap<String, Long> userPings = new HashMap<>();
+    OnMessageListener messageListener = null;
 
     public String getCurrentChannel() {
         return channelName;
@@ -192,9 +193,7 @@ public class ChatEngine implements ChildEventListener{
         Chat chat = new Chat(username, message);
         messages.add(chat);
 
-        for (OnMessageListener l : messageListeners) {
-            l.messageReceived(messages.size() - 1);
-        }
+        messageListener.messageReceived(messages.size() - 1);
     }
 
     public int getItemCount() {
@@ -207,14 +206,13 @@ public class ChatEngine implements ChildEventListener{
 
     public void switchChannel(String title) {
 
-        for (OnMessageListener l : messageListeners) {
-            l.switchChannel();
-        }
+        messageListener.switchChannel();
 
         messages.clear();
         channelName = title;
 
         channel = root.child(CHANNELS).child(channelName);
+        channel.removeEventListener(this);
         channel.addChildEventListener(this);
 
         userPings.clear();
@@ -244,9 +242,8 @@ public class ChatEngine implements ChildEventListener{
         void switchChannel();
     }
 
-    ArrayList<OnMessageListener> messageListeners = new ArrayList<>();
     public void setOnMessageListener(OnMessageListener messageListener) {
-        messageListeners.add(messageListener);
+        this.messageListener = messageListener;
     }
 
     public ArrayList<String> getActiveUsers() {
