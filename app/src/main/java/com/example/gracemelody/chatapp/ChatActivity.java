@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
@@ -22,11 +23,14 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Set;
+
+import static com.example.gracemelody.chatapp.ChatEngine.CHANNEL_LOBBY;
 
 public class ChatActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private static final String CHANNEL_LOBBY = "lobby";
+
     ChatEngine chatEngine;
     EditText txtMsg;
     NavigationView navigationView;
@@ -34,6 +38,8 @@ public class ChatActivity extends AppCompatActivity
     MenuItem leaveChannelMenuItem;
 
     Intent serviceIntent;
+
+    SharedPreferences sharedPreferences;
 
 
     @Override
@@ -66,11 +72,25 @@ public class ChatActivity extends AppCompatActivity
         chatRecyclerView.setAdapter( new ChatAdapter(chatRecyclerView, chatEngine));
         chatRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-        addChannel("lobby");
+        sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
+
+        addChannel(CHANNEL_LOBBY);
+        switchChannel(CHANNEL_LOBBY);
 
         Bundle bundle = getIntent().getExtras();
 
         String username = bundle.getString("username");
+
+        ArrayList<String> channelList = bundle.getStringArrayList("channelList");
+        if (channelList != null) {
+            //chatEngine.setChannelList(channelList);
+            for (String channel : channelList) {
+                if (! channel.equals(CHANNEL_LOBBY)) {
+                    addChannel(channel);
+                }
+            }
+
+        }
 
         chatEngine.setUsername(username);
 
@@ -84,6 +104,7 @@ public class ChatActivity extends AppCompatActivity
                     public void onPositiveClick(TextDialogFragment dialog) {
                         String newChannel = dialog.getText();
                         addChannel(newChannel);
+                        switchChannel(newChannel);
                     }
                 });
                 textDialogFragment.show(getSupportFragmentManager(), "TextDialogFragment");
@@ -147,9 +168,13 @@ public class ChatActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_leave_channel) {
-            leaveCurrentChannel();
-            return true;
+        switch(id) {
+            case R.id.action_leave_channel:
+                leaveCurrentChannel();
+                return true;
+            case R.id.action_logout:
+                logout();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -201,9 +226,14 @@ public class ChatActivity extends AppCompatActivity
         String channel = input.toLowerCase().trim();
 
         chatEngine.addChannel(channel);
-        //subscribedChannels.add(channel);
 
-        MenuItem newItem = navigationView.getMenu().add(Menu.NONE, channel.hashCode(), Menu.NONE, channel).setChecked(true);
+        Set<String> channelList = chatEngine.getChannels();
+
+        sharedPreferences.edit()
+                .putStringSet("channelList", channelList)
+                .apply();
+
+        MenuItem newItem = navigationView.getMenu().add(Menu.NONE, channel.hashCode(), Menu.NONE, channel);
 
         navigationView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -216,7 +246,7 @@ public class ChatActivity extends AppCompatActivity
             }
         });
 
-        switchChannel(channel);
+
     }
 
     void leaveCurrentChannel() {
@@ -230,7 +260,12 @@ public class ChatActivity extends AppCompatActivity
                 menu.removeItem(chatEngine.getCurrentChannel().hashCode());
 
                 chatEngine.leaveChannel(chatEngine.getCurrentChannel());
-                //subscribedChannels.remove(currentChannel);
+
+                Set<String> channelList = chatEngine.getChannels();
+                sharedPreferences.edit()
+                        .putStringSet("channelList", channelList)
+                        .apply();
+
                 switchChannel(CHANNEL_LOBBY);
             }
         });
@@ -255,5 +290,15 @@ public class ChatActivity extends AppCompatActivity
         }
         Log.i ("isMyServiceRunning?", false+"");
         return false;
+    }
+
+    private void logout() {
+        SharedPreferences sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
+        sharedPreferences.edit()
+                .clear()
+                .apply();
+        Intent goToLoginIntent = new Intent(this, LoginActivity.class);
+        startActivity(goToLoginIntent);
+        finish();
     }
 }

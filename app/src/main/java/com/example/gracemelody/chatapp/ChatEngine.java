@@ -12,13 +12,17 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 public class ChatEngine implements ChildEventListener{
 
     public static final String CHANNELS = "channels";
     public static final String CHANNEL_NOTIFICATIONS = "channels_notifs";
+
+    public static final String CHANNEL_LOBBY = "lobby";
 
     private DatabaseReference root;
     private DatabaseReference channel;
@@ -192,8 +196,20 @@ public class ChatEngine implements ChildEventListener{
 
     }
 
+    public Set<String> getChannels() {
+        return new HashSet(subscribedChannels);
+    }
+
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public void setChannelList(ArrayList<String> channelList) {
+        for (String channel : channelList) {
+            if (channel != CHANNEL_LOBBY) {
+                addChannel(channel);
+            }
+        }
     }
 
     public interface OnMessageListener {
