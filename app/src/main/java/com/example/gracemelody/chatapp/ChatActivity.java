@@ -68,6 +68,12 @@ public class ChatActivity extends AppCompatActivity
 
         addChannel("lobby");
 
+        Bundle bundle = getIntent().getExtras();
+
+        String username = bundle.getString("username");
+
+        chatEngine.setUsername(username);
+
         findViewById(R.id.floatingActionButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -89,7 +95,7 @@ public class ChatActivity extends AppCompatActivity
             public void onClick(View v) {
                 String msg = txtMsg.getText().toString();
                 txtMsg.setText("");
-                chatEngine.send("testUser", msg);
+                chatEngine.send(msg);
             }
         });
     }
@@ -98,7 +104,14 @@ public class ChatActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        NotificationService.ShowNotification = false;
 
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        NotificationService.ShowNotification = true;
     }
 
     @Override

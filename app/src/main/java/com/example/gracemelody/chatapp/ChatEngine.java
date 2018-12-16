@@ -28,6 +28,7 @@ public class ChatEngine implements ChildEventListener{
 
     private ArrayList<String> subscribedChannels = new ArrayList<>();
     private String channelName;
+    private String username;
 
     private ArrayList<Chat> messages = new ArrayList<>();
 
@@ -87,7 +88,7 @@ public class ChatEngine implements ChildEventListener{
         return subscribedChannels.contains(channel);
     }
 
-    void send(String username, String message) {
+    public void send(String message) {
         String temp_key = channel.push().getKey();
 
         DatabaseReference message_root = channel.child(temp_key);
@@ -189,6 +190,10 @@ public class ChatEngine implements ChildEventListener{
         channel.addChildEventListener(this);
 
 
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public interface OnMessageListener {

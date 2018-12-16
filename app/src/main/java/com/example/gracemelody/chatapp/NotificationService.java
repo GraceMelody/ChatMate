@@ -23,6 +23,8 @@ public class NotificationService extends Service implements ChildEventListener {
     private DatabaseReference root;
     private DatabaseReference channelNotifications;
 
+    public static boolean ShowNotification = false;
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -61,7 +63,7 @@ public class NotificationService extends Service implements ChildEventListener {
     public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
         String channelName = dataSnapshot.getKey();
 
-        if ( ! ChatEngine.Instance().isSubscribedTo(channelName)) {
+        if ( !ShowNotification || !ChatEngine.Instance().isSubscribedTo(channelName)) {
             return;
         }
 
