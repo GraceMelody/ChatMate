@@ -7,6 +7,11 @@
         android:title="Leave Channel"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_users"
+        android:orderInCategory="100"
+        android:title="View Active Users"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_logout"
         android:orderInCategory="100"
         android:title="Logout"

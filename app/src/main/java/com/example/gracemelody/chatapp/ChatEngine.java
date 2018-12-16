@@ -11,22 +11,27 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import static com.example.gracemelody.chatapp.TimeUtil.secondsToMillis;
 
 public class ChatEngine implements ChildEventListener{
 
     public static final String CHANNELS = "channels";
     public static final String CHANNEL_NOTIFICATIONS = "channels_notifs";
+    public static final String CHANNEL_PING = "channels_ping";
+
 
     public static final String CHANNEL_LOBBY = "lobby";
 
     private DatabaseReference root;
     private DatabaseReference channel;
     private DatabaseReference channelNotifications;
+    private DatabaseReference channelPing;
 
     private static ChatEngine chatEngineInstance;
 
@@ -34,7 +39,13 @@ public class ChatEngine implements ChildEventListener{
     private String channelName;
     private String username;
 
+    private Thread pingerThread;
+    boolean sendPing = false;
+
     private ArrayList<Chat> messages = new ArrayList<>();
+    private ChildEventListener activeUserPingListener = new ActiveUserPingListener();
+
+    private HashMap<String, Long> userPings = new HashMap<>();
 
     public String getCurrentChannel() {
         return channelName;
@@ -78,6 +89,35 @@ public class ChatEngine implements ChildEventListener{
 
             }
         });
+
+        pingerThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true) {
+
+                    if (sendPing && username != null && channelPing != null ) {
+                        DatabaseReference userPing = channelPing.child(username);
+                        userPing.updateChildren(new HashMap<String, Object>());
+                        userPing.setValue(System.currentTimeMillis());
+                    }
+                    try {
+                        Thread.sleep(5_000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        pingerThread.start();
+    }
+
+    public void onPause() {
+        sendPing = false;
+    }
+
+    public void onResume() {
+        sendPing = true;
+        pingerThread.interrupt();
     }
 
     public void addChannel(String channel) {
@@ -116,7 +156,7 @@ public class ChatEngine implements ChildEventListener{
 
     @Override
     public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-        //appendMessage(dataSnapshot);
+
     }
 
     @Override
@@ -155,22 +195,6 @@ public class ChatEngine implements ChildEventListener{
         for (OnMessageListener l : messageListeners) {
             l.messageReceived(messages.size() - 1);
         }
-
-        /*
-        Iterator i = dataSnapshot.getChildren().iterator();
-        while (i.hasNext()) {
-
-            String chatMessage = (String)((DataSnapshot)i.next()).getValue();
-            String chatUsername = (String)((DataSnapshot)i.next()).getValue();
-
-            //tvMessage.append(chatUsername + " : " + chatMessage + "\n");
-            messages.add(new Chat(chatUsername, chatMessage));
-            for (OnMessageListener l : messageListeners) {
-                l.messageReceived(messages.size() - 1);
-            }
-            Log.d("Chat", chatUsername + ":" + chatMessage);
-        }
-        */
     }
 
     public int getItemCount() {
@@ -193,8 +217,11 @@ public class ChatEngine implements ChildEventListener{
         channel = root.child(CHANNELS).child(channelName);
         channel.addChildEventListener(this);
 
-
+        userPings.clear();
+        channelPing = root.child(CHANNEL_PING).child(channelName);
+        channelPing.addChildEventListener(activeUserPingListener);
     }
+
 
     public Set<String> getChannels() {
         return new HashSet(subscribedChannels);
@@ -220,5 +247,50 @@ public class ChatEngine implements ChildEventListener{
     ArrayList<OnMessageListener> messageListeners = new ArrayList<>();
     public void setOnMessageListener(OnMessageListener messageListener) {
         messageListeners.add(messageListener);
+    }
+
+    public ArrayList<String> getActiveUsers() {
+        ArrayList<String> activeUsers = new ArrayList<>();
+
+        for (String user : userPings.keySet()) {
+            Long lastSeenTimestamp = userPings.get(user);
+            Long currentTimestamp = (new Date()).getTime();
+            Long timeDifference = currentTimestamp - lastSeenTimestamp;
+            if (timeDifference < secondsToMillis(30) ) {
+                activeUsers.add(user);
+            }
+        }
+        return activeUsers;
+    }
+
+    private class ActiveUserPingListener implements ChildEventListener {
+        @Override
+        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            String username = dataSnapshot.getKey();
+            Long lastSeen = (Long) dataSnapshot.getValue();
+            userPings.put(username, lastSeen);
+        }
+
+        @Override
+        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            String username = dataSnapshot.getKey();
+            Long lastSeen = (Long) dataSnapshot.getValue();
+            userPings.put(username, lastSeen);
+        }
+
+        @Override
+        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+        }
+
+        @Override
+        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
     }
 }

@@ -125,6 +125,7 @@ public class ChatActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        chatEngine.onResume();
         NotificationService.ShowNotification = false;
 
     }
@@ -132,6 +133,7 @@ public class ChatActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
+        chatEngine.onPause();
         NotificationService.ShowNotification = true;
     }
 
@@ -174,6 +176,9 @@ public class ChatActivity extends AppCompatActivity
                 return true;
             case R.id.action_logout:
                 logout();
+                return true;
+            case R.id.action_users:
+                showActiveUsers();
                 return true;
         }
 
@@ -300,5 +305,22 @@ public class ChatActivity extends AppCompatActivity
         Intent goToLoginIntent = new Intent(this, LoginActivity.class);
         startActivity(goToLoginIntent);
         finish();
+    }
+
+    private void showActiveUsers() {
+        ArrayList<String> activeUsers = chatEngine.getActiveUsers();
+
+        StringBuilder activeUsersStringBuilder = new StringBuilder();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Active Users");
+
+        for (String user : activeUsers) {
+            activeUsersStringBuilder.append(user + "\n");
+        }
+
+        builder.setMessage(activeUsersStringBuilder.toString());
+        builder.create().show();
+
+
     }
 }
