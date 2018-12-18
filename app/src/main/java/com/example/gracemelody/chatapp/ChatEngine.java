@@ -47,6 +47,7 @@ public class ChatEngine implements ChildEventListener{
 
     private HashMap<String, Long> userPings = new HashMap<>();
     OnMessageListener messageListener = null;
+    private OnOtherChannelListener onOtherChannelListener;
 
     public String getCurrentChannel() {
         return channelName;
@@ -72,6 +73,12 @@ public class ChatEngine implements ChildEventListener{
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Log.d("CHANNEL", dataSnapshot.getKey() + dataSnapshot.getValue());
+
+                String channelName = dataSnapshot.getKey();
+                if (subscribedChannels.contains(channelName) &&  ! channelName.equals(getCurrentChannel())) {
+                    onOtherChannelListener.messageReceivedOnChannel(channelName);
+                    Log.d("CHANNEL", "Listener called");
+                }
 
             }
 
@@ -242,8 +249,16 @@ public class ChatEngine implements ChildEventListener{
         void switchChannel();
     }
 
+    public interface OnOtherChannelListener {
+        void messageReceivedOnChannel (String channelName);
+    }
+
     public void setOnMessageListener(OnMessageListener messageListener) {
         this.messageListener = messageListener;
+    }
+
+    public void setOnOtherChannelListener (OnOtherChannelListener onOtherChannelListener) {
+        this.onOtherChannelListener = onOtherChannelListener;
     }
 
     public ArrayList<String> getActiveUsers() {

@@ -19,7 +19,9 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
-        app:headerLayout="@layout/nav_header_chatroom">
+        app:headerLayout="@layout/nav_header_chatroom"
+        app:itemIconTint="@color/colorPrimary"
+        app:itemTextColor="@color/drawer_item">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -31,7 +33,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentTop="true"
-                android:layout_marginEnd="10dp"
+                android:layout_marginEnd="20dp"
                 android:layout_marginTop="150dp"
                 android:clickable="true"
                 android:tint="@android:color/white"

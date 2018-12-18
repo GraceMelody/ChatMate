@@ -1,11 +1,13 @@
 package com.example.gracemelody.chatapp;
 
 import android.app.ActivityManager;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,7 +30,7 @@ import java.util.Set;
 import static com.example.gracemelody.chatapp.ChatEngine.CHANNEL_LOBBY;
 
 public class ChatActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, ChatEngine.OnOtherChannelListener {
 
 
     ChatEngine chatEngine;
@@ -66,6 +68,7 @@ public class ChatActivity extends AppCompatActivity
 
         txtMsg = findViewById(R.id.txtMsg);
         chatEngine = ChatEngine.Instance();
+        chatEngine.setOnOtherChannelListener(this);
 
         RecyclerView chatRecyclerView = findViewById(R.id.chatRecyclerView);
 
@@ -217,12 +220,11 @@ public class ChatActivity extends AppCompatActivity
         //currentChannel = newSelectedChannel;
 
         for (int i=0; i<menu.size(); i++) {
-            if (menu.getItem(i).getTitle().equals(newSelectedChannel)) {
+            if (menu.getItem(i) == menu.findItem(newSelectedChannel.hashCode())) {
                 menu.getItem(i).setIcon(android.support.design.R.drawable.design_ic_visibility);
-                menu.getItem(i).setChecked(true);
+                menu.getItem(i).setChecked(false);
             } else {
                 menu.getItem(i).setIcon(null);
-                menu.getItem(i).setChecked(false);
             }
         }
     }
@@ -322,5 +324,25 @@ public class ChatActivity extends AppCompatActivity
         builder.create().show();
 
 
+    }
+
+    @Override
+    public void messageReceivedOnChannel(String channelName) {
+        navigationView.getMenu().findItem(channelName.hashCode()).setChecked(true);
+        //navigationView.getMenu().findItem(channelName.hashCode()).setIcon(ic_notification_overlay)
+        //navigationView.getMenu().findItem(channelName.hashCode()).setTitle("!" + channelName);
+
+        // Sound only notifications
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+//                .setSmallIcon(R.mipmap.ic_launcher)
+//                .setContentTitle("ChatApp")
+//                .setContentText(String.format("New messages on #%s", channelName))
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+//                .setOnlyAlertOnce(true)
+                ;
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(123, notificationBuilder.build());
     }
 }
