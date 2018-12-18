@@ -118,6 +118,8 @@ public class ChatEngine implements ChildEventListener{
             }
         });
         pingerThread.start();
+
+        switchChannel("lobby");
     }
 
     public void onPause() {
@@ -214,7 +216,9 @@ public class ChatEngine implements ChildEventListener{
 
     public void switchChannel(String title) {
 
-        messageListener.switchChannel();
+        if (messageListener != null) {
+            messageListener.switchChannel();
+        }
 
         messages.clear();
         channelName = title;
