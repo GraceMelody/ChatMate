@@ -22,6 +22,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -84,6 +85,9 @@ public class ChatActivity extends AppCompatActivity
         Bundle bundle = getIntent().getExtras();
 
         String username = bundle.getString("username");
+
+        TextView txtUsername = navigationView.getHeaderView(0).findViewById(R.id.txtUsername);
+        txtUsername.setText(username);
 
         ArrayList<String> channelList = bundle.getStringArrayList("channelList");
         if (channelList != null) {
