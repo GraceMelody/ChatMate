@@ -36,6 +36,7 @@ public class ChatEngine implements ChildEventListener{
     private static ChatEngine chatEngineInstance;
 
     private ArrayList<String> subscribedChannels = new ArrayList<>();
+    private HashSet<String> globalChannels = new HashSet<>();
     private String channelName;
     private String username;
 
@@ -67,7 +68,8 @@ public class ChatEngine implements ChildEventListener{
         channelNotifications.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+                String channelName = dataSnapshot.getKey();
+                globalChannels.add(channelName);
             }
 
             @Override
@@ -79,7 +81,6 @@ public class ChatEngine implements ChildEventListener{
                     onOtherChannelListener.messageReceivedOnChannel(channelName);
                     Log.d("CHANNEL", "Listener called");
                 }
-
             }
 
             @Override
@@ -273,6 +274,10 @@ public class ChatEngine implements ChildEventListener{
             }
         }
         return activeUsers;
+    }
+
+    public HashSet<String> getAllChannels() {
+        return globalChannels;
     }
 
     private class ActiveUserPingListener implements ChildEventListener {

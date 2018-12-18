@@ -26,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.example.gracemelody.chatapp.ChatEngine.CHANNEL_LOBBY;
@@ -188,6 +189,9 @@ public class ChatActivity extends AppCompatActivity
             case R.id.action_users:
                 showActiveUsers();
                 return true;
+            case R.id.action_view_channels:
+                showChannels();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -328,6 +332,22 @@ public class ChatActivity extends AppCompatActivity
         builder.setMessage(activeUsersStringBuilder.toString());
         builder.create().show();
 
+
+    }
+
+    private void showChannels() {
+        HashSet<String> channels = chatEngine.getAllChannels();
+
+        StringBuilder allChannelsStringBuilder = new StringBuilder();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Showing All Channels");
+
+        for (String channel : channels) {
+            allChannelsStringBuilder.append(channel + "\n");
+        }
+
+        builder.setMessage(allChannelsStringBuilder.toString());
+        builder.create().show();
 
     }
 

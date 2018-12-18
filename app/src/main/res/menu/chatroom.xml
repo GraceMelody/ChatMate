@@ -12,6 +12,11 @@
         android:title="View Active Users"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_view_channels"
+        android:orderInCategory="100"
+        android:title="List Channels"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_logout"
         android:orderInCategory="100"
         android:title="Logout"
