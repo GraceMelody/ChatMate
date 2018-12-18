@@ -112,6 +112,9 @@ public class ChatActivity extends AppCompatActivity
                     @Override
                     public void onPositiveClick(TextDialogFragment dialog) {
                         String newChannel = dialog.getText();
+                        if (newChannel.isEmpty()) {
+                            return;
+                        }
                         addChannel(newChannel);
                         switchChannel(newChannel);
                     }
