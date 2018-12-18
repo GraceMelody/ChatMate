@@ -269,7 +269,7 @@ public class ChatEngine implements ChildEventListener{
             Long lastSeenTimestamp = userPings.get(user);
             Long currentTimestamp = (new Date()).getTime();
             Long timeDifference = currentTimestamp - lastSeenTimestamp;
-            if (timeDifference < secondsToMillis(30) ) {
+            if (timeDifference < secondsToMillis(10) ) {
                 activeUsers.add(user);
             }
         }
