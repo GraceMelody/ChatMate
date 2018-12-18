@@ -65,6 +65,7 @@ public class ChatActivity extends AppCompatActivity
 
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        navigationView.setItemIconTintList(null);
 
         txtMsg = findViewById(R.id.txtMsg);
         chatEngine = ChatEngine.Instance();
@@ -329,7 +330,8 @@ public class ChatActivity extends AppCompatActivity
     @Override
     public void messageReceivedOnChannel(String channelName) {
         navigationView.getMenu().findItem(channelName.hashCode()).setChecked(true);
-        //navigationView.getMenu().findItem(channelName.hashCode()).setIcon(ic_notification_overlay)
+        navigationView.getMenu().findItem(channelName.hashCode()).setIcon(R.mipmap.ic_notif_foreground);
+
         //navigationView.getMenu().findItem(channelName.hashCode()).setTitle("!" + channelName);
 
         // Sound only notifications
